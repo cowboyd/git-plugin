@@ -937,14 +937,7 @@ public class GitSCM extends SCM implements Serializable {
         environment.put(GIT_COMMIT, revToBuild.getSha1String());
 
 
-		//attempt to put GIT_COMMIT and GIT_BRANCH somewhere where the builders can see them.
-		EnvVars env = build.getEnvironment(listener);
-		env.put(GIT_COMMIT, revToBuild.getSha1String());
-
-		if (revToBuild.getBranches().size() > 0) {
-			env.put(GIT_BRANCH, revToBuild.getBranches().iterator().next().getName());
-			listener.getLogger().println("branch is: " + revToBuild.getBranches().iterator().next().getName());
-		}
+		build.addAction(new AddGitEnvironmentVariablesAction(revToBuild));
 
 
         if (mergeOptions.doMerge()) {
@@ -1575,4 +1568,34 @@ public class GitSCM extends SCM implements Serializable {
      * Used by various classes in this package.
      */
     public static boolean VERBOSE = Boolean.getBoolean(GitSCM.class.getName()+".verbose");
+
+	private static class AddGitEnvironmentVariablesAction implements EnvironmentContributingAction {
+
+		private String sha1;
+		private String branch;
+
+		public AddGitEnvironmentVariablesAction(Revision revision) {
+			this.sha1 = revision.getSha1String();
+			this.branch = revision.getBranches().iterator().next().getName().split("/")[1];
+		}
+
+		public void buildEnvVars(AbstractBuild<?, ?> build, EnvVars env) {
+			env.put(GIT_COMMIT, sha1);
+			env.put(GIT_BRANCH, branch);
+		}
+
+		public String getDisplayName() {
+			return "Add Git Variables to Build Environment";
+		}
+
+		public String getIconFileName() {
+			return null;  //To change body of implemented methods use File | Settings | File Templates.
+		}
+
+		public String getUrlName() {
+			return null;  //To change body of implemented methods use File | Settings | File Templates.
+		}
+
+
+	}
 }
