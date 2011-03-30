@@ -936,6 +936,17 @@ public class GitSCM extends SCM implements Serializable {
         listener.getLogger().println("Commencing build of " + revToBuild);
         environment.put(GIT_COMMIT, revToBuild.getSha1String());
 
+
+		//attempt to put GIT_COMMIT and GIT_BRANCH somewhere where the builders can see them.
+		EnvVars env = build.getEnvironment(listener);
+		env.put(GIT_COMMIT, revToBuild.getSha1String());
+
+		if (revToBuild.getBranches().size() > 0) {
+			env.put(GIT_BRANCH, revToBuild.getBranches().iterator().next().getName());
+			listener.getLogger().println("branch is: " + revToBuild.getBranches().iterator().next().getName());
+		}
+
+
         if (mergeOptions.doMerge()) {
             if (!revToBuild.containsBranchName(mergeOptions.getRemoteBranchName())) {
                 returnData = workingDirectory.act(new FileCallable<Object[]>() {
